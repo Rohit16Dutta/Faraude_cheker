@@ -41,7 +41,7 @@ The site runs on **Cloudflare Workers**: `worker.mjs` handles the API and Cloudf
 **One-time setup (works from a phone):**
 
 1. Sign in at [dash.cloudflare.com](https://dash.cloudflare.com).
-2. Go to **Workers & Pages → Create → Import a repository**. Connect GitHub if asked, then pick `Rohit16Dutta/Faraude_cheker`.
+2. Go to **Workers & Pages → Create → Import a repository**. Connect GitHub if asked, then pick `Rohit16Dutta/Fraud_Checker`.
 3. Keep the project name **`courier-check`** (it must match `name` in `wrangler.toml`). Leave the build command empty and the deploy command as `npx wrangler deploy`. Then deploy.
 4. When the first deploy finishes, open the Worker's **Settings → Variables and Secrets** and add each as a **Secret**:
    - `ACCESS_KEY`: any long password. The site asks for it once per device.
