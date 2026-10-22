@@ -1,0 +1,19 @@
+# Cloudflare Workers config. Deploy by connecting this repo in the Cloudflare dashboard
+# (Workers & Pages → Create → Import a repository) or with `npx wrangler deploy`.
+name = "courier-check"
+main = "worker.mjs"
+compatibility_date = "2025-10-01"
+
+# Keep variables and secrets set in the dashboard when a new version deploys.
+keep_vars = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# Seller reports. Wrangler creates this KV namespace on the first deploy.
+[[kv_namespaces]]
+binding = "REPORTS"
+
+[observability]
+enabled = true

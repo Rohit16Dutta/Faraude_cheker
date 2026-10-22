@@ -34,16 +34,25 @@ npm start
 
 The server prints which couriers it found credentials for.
 
-## Deploy online (Render)
+## Deploy on Cloudflare (auto-updates from GitHub)
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Rohit16Dutta/Faraude_cheker)
+The site runs on **Cloudflare Workers**: `worker.mjs` handles the API and Cloudflare serves `public/` directly. Once the repo is connected, every push to GitHub redeploys the site automatically.
 
-1. Tap the button and sign in to Render (a GitHub login works).
-2. Fill in the logins for the couriers you use. Leave the others blank.
-3. Deploy. Render gives you a link like `https://courier-check-xxxx.onrender.com`.
-4. Open **Environment** in Render to see the generated `ACCESS_KEY`. The site asks for it once per device.
+**One-time setup (works from a phone):**
 
-On Render's free plan the site sleeps when idle, so the first visit after a break takes about a minute. Seller reports are stored on the server's disk, which the free plan clears on every restart or redeploy.
+1. Sign in at [dash.cloudflare.com](https://dash.cloudflare.com).
+2. Go to **Workers & Pages → Create → Import a repository**. Connect GitHub if asked, then pick `Rohit16Dutta/Faraude_cheker`.
+3. Keep the project name **`courier-check`** (it must match `name` in `wrangler.toml`). Leave the build command empty and the deploy command as `npx wrangler deploy`. Then deploy.
+4. When the first deploy finishes, open the Worker's **Settings → Variables and Secrets** and add each as a **Secret**:
+   - `ACCESS_KEY`: any long password. The site asks for it once per device.
+   - The logins for the couriers you use (`STEADFAST_USER`, `STEADFAST_PASSWORD`, `PATHAO_USER`, and so on; see the table below).
+5. Open your site at `https://courier-check.<your-subdomain>.workers.dev`. A custom domain can be added under **Settings → Domains & Routes**.
+
+The first deploy also creates the **REPORTS** KV namespace that stores seller reports. Secrets and dashboard variables are kept across deploys (`keep_vars = true`).
+
+To try the site without courier accounts, add a variable `DEMO_MODE` = `1`.
+
+From a computer you can also run `npx wrangler dev` to test locally on the Workers runtime, or `npx wrangler deploy` to deploy by hand.
 
 ## Configuration (`.env`)
 
@@ -87,10 +96,13 @@ If `ACCESS_KEY` is set, send it in the `X-Access-Key` header.
 ## Project layout
 
 ```
-server.js               web server + API (no dependencies)
+worker.mjs              Cloudflare Workers entry point (reports in Workers KV)
+wrangler.toml           Cloudflare config
+server.js               Node server for running locally (no dependencies)
+lib/api.js              the JSON API, shared by the Worker and the Node server
 lib/couriers/*.js       one adapter per courier; index.js finds the configured ones
 lib/aggregate.js        combines courier results + reports into the overall view
-lib/reports.js          merchant reports (stored in data/reports.json)
+lib/reports.js          merchant report rules; lib/report-store-file.js saves them locally
 lib/phone.js            Bangladeshi mobile number normalisation
 lib/http.js             fetch helper: timeouts, cookies, cached logins
 public/                 the website (HTML, CSS, JS)
