@@ -70,24 +70,6 @@ a { color: var(--accent); }
   margin-bottom: 20px;
 }
 
-.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
-.tabs button {
-  flex: 1 1 auto;
-  font: inherit;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-}
-.tabs button[aria-selected="true"] {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-text);
-  font-weight: 600;
-}
-
 label { display: block; font-weight: 600; margin-bottom: 8px; }
 
 input, textarea {
@@ -133,11 +115,6 @@ input:focus-visible, textarea:focus-visible, button:focus-visible {
 .verdict.medium { background: var(--medium-bg); color: var(--medium); }
 .verdict.low { background: var(--low-bg); color: var(--low); }
 
-.meter { height: 10px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 6px; }
-.meter span { display: block; height: 100%; border-radius: 99px; transition: width 0.4s ease; }
-.meter .high { background: var(--high); }
-.meter .medium { background: var(--medium); }
-.meter .low { background: var(--low); }
 .meter-label { color: var(--muted); font-size: 0.9rem; margin: 0 0 16px; }
 
 .findings { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
@@ -152,14 +129,6 @@ input:focus-visible, textarea:focus-visible, button:focus-visible {
 .findings li.low { border-color: var(--low); background: var(--low-bg); }
 .findings strong { display: block; color: var(--text); }
 .findings span { color: var(--muted); font-size: 0.95rem; }
-.badge {
-  display: inline-block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.04em; margin-right: 6px;
-}
-.findings li.high .badge { color: var(--high); }
-.findings li.medium .badge { color: var(--medium); }
-.findings li.low .badge { color: var(--low); }
-.findings li.info .badge { color: var(--info); }
 
 .error { color: var(--high); margin: 0; }
 
@@ -171,7 +140,6 @@ input:focus-visible, textarea:focus-visible, button:focus-visible {
 
 @media (max-width: 480px) {
   .site-header h1 { font-size: 1.6rem; }
-  .tabs button { flex-basis: 100%; }
 }
 
 /* ---------- Customer phone check ---------- */

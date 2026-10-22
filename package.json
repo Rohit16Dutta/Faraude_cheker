@@ -1,8 +1,8 @@
 {
-  "name": "fraud-checker",
+  "name": "courier-fraud-checker",
   "version": "2.0.0",
   "private": true,
-  "description": "Check a customer's delivery record across Bangladeshi couriers before shipping, and spot scam links, messages and emails.",
+  "description": "Check a customer's delivery record across Bangladeshi couriers before shipping a cash-on-delivery order.",
   "engines": {
     "node": ">=20.12"
   },

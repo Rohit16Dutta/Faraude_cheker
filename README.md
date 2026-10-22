@@ -1,4 +1,4 @@
-# Fraud Checker
+# Courier Fraud Checker
 
 A courier fraud checker for Bangladeshi online sellers, like the ones built into courier merchant panels. The difference is that it checks **every courier at once** and combines the results into one overall view.
 
@@ -14,8 +14,6 @@ Enter a customer's mobile number and it will:
    - reports from other merchants who use your checker
 
 If one courier is down or rejects the login, the others still show. The page tells you which one failed and why.
-
-It also keeps the original scam checks for **website links**, **messages** and **email addresses**. Those run entirely in the browser.
 
 ## Quick start
 
