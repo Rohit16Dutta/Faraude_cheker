@@ -173,3 +173,97 @@ input:focus-visible, textarea:focus-visible, button:focus-visible {
   .site-header h1 { font-size: 1.6rem; }
   .tabs button { flex-basis: 100%; }
 }
+
+/* ---------- Customer phone check ---------- */
+
+.key-row { margin-top: 12px; }
+
+.verdict.new { background: var(--info-bg); color: var(--info); }
+.verdict.unknown { background: var(--medium-bg); color: var(--medium); }
+
+.demo-banner {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--info-bg);
+  color: var(--info);
+  font-weight: 600;
+}
+
+.loading { margin: 0; color: var(--muted); }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.stat {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+.stat strong { display: block; font-size: 1.6rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 0.85rem; }
+.stat.low strong { color: var(--low); }
+.stat.medium strong { color: var(--medium); }
+.stat.high strong { color: var(--high); }
+
+.split {
+  display: flex;
+  height: 10px;
+  border-radius: 99px;
+  overflow: hidden;
+  background: var(--border);
+  margin-bottom: 6px;
+}
+.split .ok { background: var(--low); }
+.split .bad { background: var(--high); }
+
+.notes { margin: 0 0 8px; padding-left: 20px; color: var(--medium); }
+
+.table-wrap { overflow-x: auto; }
+table.couriers { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.couriers th, table.couriers td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+table.couriers thead th { color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+table.couriers .num { text-align: right; }
+table.couriers .rate { min-width: 110px; }
+table.couriers .rate .split { margin-bottom: 2px; height: 8px; }
+table.couriers .rate span { font-size: 0.85rem; color: var(--muted); }
+table.couriers tr.muted td, table.couriers tr.muted th { color: var(--muted); }
+
+.muted-text { color: var(--muted); margin: 0; }
+
+details.report {
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+details.report summary { cursor: pointer; font-weight: 600; }
+.report-form { display: grid; gap: 6px; margin-top: 12px; }
+.report-form label { margin: 6px 0 0; }
+
+select {
+  width: 100%;
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.actions button.small { padding: 8px 14px; font-size: 0.95rem; }
+
+@media (max-width: 560px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  table.couriers th, table.couriers td { padding: 8px 4px; font-size: 0.9rem; }
+  table.couriers .rate { min-width: 70px; }
+}

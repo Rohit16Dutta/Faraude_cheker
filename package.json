@@ -1,10 +1,14 @@
 {
   "name": "fraud-checker",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Check links, messages and email addresses for common scam warning signs — runs entirely in the browser.",
+  "description": "Check a customer's delivery record across Bangladeshi couriers before shipping, and spot scam links, messages and emails.",
+  "engines": {
+    "node": ">=20.12"
+  },
   "scripts": {
-    "test": "node --test tests/*.test.js",
-    "start": "npx --yes serve ."
+    "start": "node server.js",
+    "demo": "DEMO_MODE=1 node server.js",
+    "test": "node --test tests/*.test.js"
   }
 }

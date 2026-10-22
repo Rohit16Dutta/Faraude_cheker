@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { checkUrl, checkMessage, checkEmail, registrableDomain } = require("../js/checks.js");
+const { checkUrl, checkMessage, checkEmail, registrableDomain } = require("../public/js/checks.js");
 
 const titles = (r) => r.findings.map((f) => f.title).join(" | ");
 

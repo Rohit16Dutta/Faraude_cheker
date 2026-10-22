@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fraud Checker</title>
   <meta name="description" content="Check suspicious links, messages and email addresses for common scam warning signs. Runs entirely in your browser.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="site-header">
     <div class="wrap">
       <h1><span class="logo" aria-hidden="true">🛡️</span> Fraud Checker</h1>
-      <p class="tagline">Got a strange link, text or email? Check it for common scam warning signs before you click or reply.</p>
+      <p class="tagline">Check a customer's delivery record across every courier before you ship — and spot scam links, messages and emails.</p>
     </div>
   </header>
 
@@ -19,27 +20,38 @@
     <section class="card" aria-labelledby="check-heading">
       <h2 id="check-heading" class="visually-hidden">Run a check</h2>
       <div class="tabs" role="tablist" aria-label="What do you want to check?">
-        <button role="tab" id="tab-url" aria-controls="panel" aria-selected="true" data-mode="url">🔗 Website link</button>
+        <button role="tab" id="tab-phone" aria-controls="panel" aria-selected="true" data-mode="phone">📦 Customer phone</button>
+        <button role="tab" id="tab-url" aria-controls="panel" aria-selected="false" data-mode="url" tabindex="-1">🔗 Website link</button>
         <button role="tab" id="tab-message" aria-controls="panel" aria-selected="false" data-mode="message" tabindex="-1">💬 Message</button>
         <button role="tab" id="tab-email" aria-controls="panel" aria-selected="false" data-mode="email" tabindex="-1">✉️ Email address</button>
       </div>
 
-      <form id="panel" role="tabpanel" aria-labelledby="tab-url" novalidate>
+      <form id="panel" role="tabpanel" aria-labelledby="tab-phone" novalidate>
         <label for="input" id="input-label">Paste the link you want to check</label>
         <input id="input" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. http://paypa1-secure-login.xyz/verify">
         <textarea id="input-text" rows="6" hidden placeholder="Paste the SMS, WhatsApp or email text here…"></textarea>
+        <div id="key-row" class="key-row" hidden>
+          <label for="access-key">Access key</label>
+          <input id="access-key" type="password" autocomplete="current-password" placeholder="Ask the site owner for the key">
+        </div>
         <div class="actions">
           <button type="submit" class="primary">Check now</button>
           <button type="button" class="ghost" id="example">Try an example</button>
         </div>
-        <p class="privacy">🔒 Nothing leaves your device — all checks run in your browser.</p>
+        <p class="privacy" id="privacy"></p>
       </form>
     </section>
 
     <section id="result" class="card result" hidden aria-live="polite"></section>
 
     <section class="card tips">
-      <h2>How to stay safe</h2>
+      <h2>Before you ship a cash-on-delivery order</h2>
+      <ul>
+        <li><strong>Below 50% success?</strong> Ask for full or partial advance payment (bKash / Nagad) before sending.</li>
+        <li><strong>New customer or 50–80%?</strong> Call to confirm the order and address; consider taking the delivery charge in advance.</li>
+        <li><strong>Report customers who refuse parcels</strong> so other sellers using this checker are warned too.</li>
+      </ul>
+      <h2>How to stay safe from scams</h2>
       <ul>
         <li><strong>Never share OTPs, PINs or passwords</strong> — not with your bank, not with "support", not with anyone.</li>
         <li><strong>Go direct.</strong> Instead of clicking a link, type the company's address yourself or use their official app.</li>
@@ -50,6 +62,7 @@
       <h3>Already been scammed?</h3>
       <p>Contact your bank immediately to freeze payments, change any passwords you shared, and report it:</p>
       <ul class="report-links">
+        <li>🇧🇩 Bangladesh: call <strong>999</strong> (national emergency) or contact your local police station</li>
         <li>🇮🇳 India: call <strong>1930</strong> or visit <a href="https://cybercrime.gov.in" target="_blank" rel="noopener">cybercrime.gov.in</a></li>
         <li>🇺🇸 USA: <a href="https://reportfraud.ftc.gov" target="_blank" rel="noopener">reportfraud.ftc.gov</a></li>
         <li>🇬🇧 UK: forward scam texts to <strong>7726</strong>, report at <a href="https://www.actionfraud.police.uk" target="_blank" rel="noopener">actionfraud.police.uk</a></li>

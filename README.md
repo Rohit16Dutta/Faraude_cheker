@@ -1,39 +1,98 @@
 # Fraud Checker
 
-A simple website that helps people spot scams before they click, reply or pay.
-It checks three things:
+A courier fraud checker for Bangladeshi online sellers, like the ones built into courier merchant panels. The difference is that it checks **every courier at once** and combines the results into one overall view.
 
-| Check | What it looks for |
-| --- | --- |
-| **Website link** | Fake brand domains (`paypal-secure.xyz`), lookalikes (`paypa1.com`, `amazom.com`), raw IP addresses, punycode, `@` tricks, link shorteners, risky domain endings, missing HTTPS, app/program downloads |
-| **Message** (SMS / WhatsApp / email text) | Requests for OTPs, PINs or passwords; gift card / crypto / wire payments; urgency and threats; prizes and lotteries; "guaranteed returns"; fake jobs; KYC / account verification; parcel fees; remote-access apps — plus a check of every link inside it |
-| **Email address** | Disposable inboxes, company-sounding names on free accounts (`paypal.security@gmail.com`), lookalike company domains, random-looking usernames |
+Enter a customer's mobile number and it will:
 
-Each check gives a risk score (0–100), a verdict (**High risk**, **Suspicious** or **No major red flags**) and a plain-language explanation of every warning sign it found.
+1. **Detect which couriers you've connected.** Any courier with login details in `.env` is checked; the rest are skipped.
+2. **Look up that number with each courier in parallel:** Steadfast, Pathao, RedX, Paperfly and Carrybee.
+3. **Combine everything into one overall view:**
+   - total parcels, delivered, and cancelled/returned
+   - overall success rate and a verdict: ✅ **Trusted**, ⚠️ **Be careful**, 🚨 **High fraud risk**, 🆕 **New customer**
+   - what to do next (e.g. take an advance payment)
+   - a per-courier breakdown
+   - reports from other merchants who use your checker
 
-**Privacy:** everything runs in the browser. There's no server, and nothing you paste is sent anywhere.
+If one courier is down or rejects the login, the others still show. The page tells you which one failed and why.
 
-> ⚠️ This tool uses heuristics. It catches common scam patterns but can't prove something is safe.
+It also keeps the original scam checks for **website links**, **messages** and **email addresses**. Those run entirely in the browser.
 
-## Run it
+## Quick start
 
-It's a static site with no build step. Open `index.html` directly, or serve the folder:
+Requires Node.js 20.12 or newer. There are no dependencies to install.
 
 ```bash
-npm start          # serves the site with `npx serve`
+npm run demo        # try it with made-up courier numbers, no accounts needed
 ```
 
-To publish it for free, enable **GitHub Pages** for the repository (Settings → Pages → deploy from branch, root folder).
+Open http://localhost:3000.
+
+To use real data:
+
+```bash
+cp .env.example .env    # then fill in your courier merchant logins
+npm start
+```
+
+The server prints which couriers it found credentials for.
+
+## Configuration (`.env`)
+
+| Setting | What it does |
+| --- | --- |
+| `STEADFAST_USER` / `STEADFAST_PASSWORD` | Steadfast merchant panel login |
+| `PATHAO_USER` / `PATHAO_PASSWORD` | Pathao merchant login |
+| `REDX_PHONE` / `REDX_PASSWORD` | RedX merchant login (phone as `01XXXXXXXXX`) |
+| `PAPERFLY_USER` / `PAPERFLY_PASSWORD` | Paperfly merchant login |
+| `CARRYBEE_PHONE` / `CARRYBEE_PASSWORD` | Carrybee merchant login |
+| `ACCESS_KEY` | **Set this if the site is on the internet.** The API then requires this key, so strangers can't run lookups with your courier accounts. |
+| `DEMO_MODE` | `1` shows fake numbers (clearly labelled) for trying the site |
+| `CACHE_MINUTES` | How long a number's result is remembered (default 30) |
+| `RATE_LIMIT_PER_MINUTE` | Checks per visitor per minute (default 30) |
+| `PORT` | Default 3000 |
+
+## How the score works
+
+- The **success rate** is delivered ÷ (delivered + cancelled), across every courier that answered.
+- **80% or more** is Trusted. **50–79%** is Be careful. **Below 50%** is High fraud risk. **No history** is New customer.
+- **Merchant reports** raise the level: one report gives at least *Be careful*, two or more give *High fraud risk*.
+- If there are fewer than 3 past parcels, or a courier couldn't be checked, the page adds a note.
+
+## ⚠️ Important
+
+- **These are not official courier APIs.** The couriers don't publish a public fraud-check API, so this logs in to their **merchant panels** with your account, the same way the existing BD fraud-checker plugins do. The couriers can change these at any time, and a courier may then stop working until its adapter is updated.
+- **RedX** has started requiring OTP login on some accounts, which can't be automated. If RedX fails to log in, that is probably the reason.
+- Check each courier's terms of service before using this in production.
+- Customer phone numbers are personal data. Use the results only to decide how to ship an order.
+
+## API
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /api/check?phone=01712345678` | Overall view plus per-courier results and reports. Accepts `+880…`, spaces and Bangla digits. `&refresh=1` skips the cache. |
+| `POST /api/reports` | Body: `{ "phone", "reason", "note"?, "shop"? }`. `reason` must be one of the values from `/api/couriers`. |
+| `GET /api/couriers` | Which couriers are connected, plus the report reasons. |
+
+If `ACCESS_KEY` is set, send it in the `X-Access-Key` header.
 
 ## Project layout
 
 ```
-index.html        page markup
-styles.css        styles (light + dark mode, mobile friendly)
-js/checks.js      all detection rules — pure functions, no DOM
-js/app.js         UI wiring
-tests/            unit tests for the rules (Node's built-in test runner)
+server.js               web server + API (no dependencies)
+lib/couriers/*.js       one adapter per courier; index.js finds the configured ones
+lib/aggregate.js        combines courier results + reports into the overall view
+lib/reports.js          merchant reports (stored in data/reports.json)
+lib/phone.js            Bangladeshi mobile number normalisation
+lib/http.js             fetch helper: timeouts, cookies, cached logins
+public/                 the website (HTML, CSS, JS)
+tests/                  unit + server tests (npm test)
 ```
+
+### Adding another courier
+
+1. Create `lib/couriers/<name>.js` exporting `{ id, name, env, createClient({ env, fetch }) }`. `createClient` returns `{ check(phone) }`, which resolves to `{ total, success, cancel }`.
+2. Add it to the list in `lib/couriers/index.js`.
+3. Add its variables to `.env.example` and a test with a fake `fetch` in `tests/courier.test.js`.
 
 ## Tests
 
@@ -41,8 +100,8 @@ tests/            unit tests for the rules (Node's built-in test runner)
 npm test
 ```
 
-## Extending the rules
+The courier tests use a fake network, so they need no real accounts.
 
-- Add a commonly impersonated brand to `BRANDS` in `js/checks.js` with its official domains.
-- Add message patterns to `MESSAGE_RULES` (severity `high` / `medium` / `low`).
-- Add a test for each new rule in `tests/checks.test.js`.
+## Credits
+
+The courier merchant-panel endpoints were identified with reference to the open-source [Fraud-Checker-BD-Courier-Laravel](https://github.com/AbiruzzamanMolla/Fraud-Checker-BD-Courier-Laravel) project. This is an independent implementation.
