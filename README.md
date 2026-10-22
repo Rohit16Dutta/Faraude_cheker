@@ -1,4 +1,4 @@
-# Courier Fraud Checker
+# Courier Check
 
 A courier fraud checker for Bangladeshi online sellers, like the ones built into courier merchant panels. The difference is that it checks **every courier at once** and combines the results into one overall view.
 
@@ -8,7 +8,7 @@ Enter a customer's mobile number and it will:
 2. **Look up that number with each courier in parallel:** Steadfast, Pathao, RedX, Paperfly and Carrybee.
 3. **Combine everything into one overall view:**
    - total parcels, delivered, and cancelled/returned
-   - overall success rate and a verdict: ✅ **Trusted**, ⚠️ **Be careful**, 🚨 **High fraud risk**, 🆕 **New customer**
+   - overall success rate and a verdict: ✅ **Trusted**, ⚠️ **Be careful**, 🚨 **High risk**, 🆕 **New customer**
    - what to do next (e.g. take an advance payment)
    - a per-courier breakdown
    - reports from other merchants who use your checker
@@ -52,8 +52,8 @@ The server prints which couriers it found credentials for.
 ## How the score works
 
 - The **success rate** is delivered ÷ (delivered + cancelled), across every courier that answered.
-- **80% or more** is Trusted. **50–79%** is Be careful. **Below 50%** is High fraud risk. **No history** is New customer.
-- **Merchant reports** raise the level: one report gives at least *Be careful*, two or more give *High fraud risk*.
+- **80% or more** is Trusted. **50–79%** is Be careful. **Below 50%** is High risk. **No history** is New customer.
+- **Merchant reports** raise the level: one report gives at least *Be careful*, two or more give *High risk*.
 - If there are fewer than 3 past parcels, or a courier couldn't be checked, the page adds a note.
 
 ## ⚠️ Important

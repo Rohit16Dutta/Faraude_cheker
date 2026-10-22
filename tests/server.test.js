@@ -18,7 +18,7 @@ test("serves the site and blocks path traversal", async (t) => {
   t.after(app.close);
   const home = await fetch(`${app.base}/`);
   assert.equal(home.status, 200);
-  assert.match(await home.text(), /Courier Fraud Checker/);
+  assert.match(await home.text(), /Courier Check/);
   assert.equal((await fetch(`${app.base}/js/app.js`)).status, 200);
   assert.notEqual((await fetch(`${app.base}/..%2fserver.js`)).status, 200);
   assert.notEqual((await fetch(`${app.base}/..%2f.env.example`)).status, 200);
@@ -68,7 +68,7 @@ test("reports are saved and included in later checks", async (t) => {
 
   const data = await (await fetch(`${app.base}/api/check?phone=01712345678`)).json();
   assert.equal(data.reports.length, 2);
-  assert.equal(data.reports[0].reasonLabel, "Refused to receive the parcel");
+  assert.equal(data.reports[0].reasonLabel, "Refused parcel");
   assert.equal(data.overall.level, "high");
 });
 

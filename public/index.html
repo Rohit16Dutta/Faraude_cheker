@@ -2,52 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Courier Fraud Checker</title>
-  <meta name="description" content="Check a Bangladeshi customer's delivery record across Steadfast, Pathao, RedX, Paperfly and Carrybee before you ship.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Courier Check</title>
+  <meta name="description" content="Check a customer's delivery record across Bangladeshi couriers.">
+  <meta name="theme-color" content="#0b0d12" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%235b5bf7'/><path d='M9 16.5l4.5 4.5L23 11.5' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="wrap">
-      <h1><span class="logo" aria-hidden="true">📦</span> Courier Fraud Checker</h1>
-      <p class="tagline">Check a customer's delivery record across every courier before you ship a cash-on-delivery order.</p>
+  <div class="glow" aria-hidden="true"></div>
+
+  <main class="shell">
+    <header class="brand">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </span>
+      Courier Check
+    </header>
+
+    <form id="check-form" class="search" novalidate>
+      <label for="phone" class="sr-only">Customer phone number</label>
+      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 006.6 6.6l2.2-2.2a1 1 0 011-.25 11.4 11.4 0 003.6.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.57a1 1 0 01-.25 1z"/></svg>
+      <input id="phone" type="tel" inputmode="tel" autocomplete="off" placeholder="01XXXXXXXXX" autofocus>
+      <button type="submit" class="go" aria-label="Check">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </form>
+
+    <div id="key-row" class="key" hidden>
+      <label for="access-key" class="sr-only">Access key</label>
+      <input id="access-key" type="password" autocomplete="current-password" placeholder="Access key">
     </div>
-  </header>
 
-  <main class="wrap">
-    <section class="card" aria-labelledby="check-heading">
-      <h2 id="check-heading" class="visually-hidden">Check a customer</h2>
-      <form id="check-form" novalidate>
-        <label for="phone">Customer's mobile number</label>
-        <input id="phone" type="tel" inputmode="tel" autocomplete="off" placeholder="e.g. 01712345678">
-        <div id="key-row" class="key-row" hidden>
-          <label for="access-key">Access key</label>
-          <input id="access-key" type="password" autocomplete="current-password" placeholder="Ask the site owner for the key">
-        </div>
-        <div class="actions">
-          <button type="submit" class="primary">Check now</button>
-        </div>
-        <p class="privacy">Checked live with every courier you've connected (Steadfast, Pathao, RedX, Paperfly, Carrybee).</p>
-      </form>
-    </section>
+    <div id="recent" class="recent" hidden></div>
 
-    <section id="result" class="card result" hidden aria-live="polite"></section>
-
-    <section class="card tips">
-      <h2>Before you ship a cash-on-delivery order</h2>
-      <ul>
-        <li><strong>Below 50% success?</strong> Ask for full or partial advance payment (bKash / Nagad) before sending.</li>
-        <li><strong>New customer or 50–80%?</strong> Call to confirm the order and address; consider taking the delivery charge in advance.</li>
-        <li><strong>Report customers who refuse parcels</strong> so other sellers using this checker are warned too.</li>
-      </ul>
-    </section>
+    <section id="result" class="result" hidden aria-live="polite"></section>
   </main>
-
-  <footer class="wrap site-footer">
-    <p>Results come from the couriers' merchant panels and reports by other sellers. Use them as a guide, not a guarantee.</p>
-  </footer>
 
   <script src="js/app.js"></script>
 </body>
