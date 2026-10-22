@@ -34,6 +34,17 @@ npm start
 
 The server prints which couriers it found credentials for.
 
+## Deploy online (Render)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Rohit16Dutta/Faraude_cheker)
+
+1. Tap the button and sign in to Render (a GitHub login works).
+2. Fill in the logins for the couriers you use. Leave the others blank.
+3. Deploy. Render gives you a link like `https://courier-check-xxxx.onrender.com`.
+4. Open **Environment** in Render to see the generated `ACCESS_KEY`. The site asks for it once per device.
+
+On Render's free plan the site sleeps when idle, so the first visit after a break takes about a minute. Seller reports are stored on the server's disk, which the free plan clears on every restart or redeploy.
+
 ## Configuration (`.env`)
 
 | Setting | What it does |
