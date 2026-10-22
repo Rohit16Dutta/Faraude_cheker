@@ -2,43 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Courier Check</title>
-  <meta name="description" content="Check a customer's delivery record across Bangladeshi couriers.">
-  <meta name="theme-color" content="#0b0d12" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%235b5bf7'/><path d='M9 16.5l4.5 4.5L23 11.5' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <meta name="description" content="Check a customer's delivery history across Bangladeshi couriers.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2318181b'/><path d='M9 12l7-4 7 4v8l-7 4-7-4z M9 12l7 4 7-4 M16 16v8' stroke='white' stroke-width='2' fill='none' stroke-linejoin='round'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="glow" aria-hidden="true"></div>
-
-  <main class="shell">
-    <header class="brand">
-      <span class="mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-      </span>
-      Courier Check
-    </header>
-
-    <form id="check-form" class="search" novalidate>
-      <label for="phone" class="sr-only">Customer phone number</label>
-      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 006.6 6.6l2.2-2.2a1 1 0 011-.25 11.4 11.4 0 003.6.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.57a1 1 0 01-.25 1z"/></svg>
-      <input id="phone" type="tel" inputmode="tel" autocomplete="off" placeholder="01XXXXXXXXX" autofocus>
-      <button type="submit" class="go" aria-label="Check">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </button>
-    </form>
-
-    <div id="key-row" class="key" hidden>
-      <label for="access-key" class="sr-only">Access key</label>
-      <input id="access-key" type="password" autocomplete="current-password" placeholder="Access key">
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="logo" href="/">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8l8-4.5L20 8v8l-8 4.5L4 16z M4 8l8 4.5L20 8 M12 12.5v8"/></svg>
+        Courier Check
+      </a>
+      <span id="connection" class="connection" hidden></span>
     </div>
+  </header>
 
-    <div id="recent" class="recent" hidden></div>
+  <main class="container">
+    <section class="lookup">
+      <h1>Customer lookup</h1>
+      <p class="lede">Delivery history from Steadfast, Pathao, RedX, Paperfly and Carrybee.</p>
+
+      <form id="check-form" class="search" novalidate>
+        <label for="phone" class="field-label">Phone number</label>
+        <div class="search-row">
+          <input id="phone" class="input input-lg" type="tel" inputmode="tel" autocomplete="off" placeholder="01XXX-XXXXXX" aria-describedby="phone-error" autofocus>
+          <button type="submit" class="btn btn-primary btn-lg" id="check-btn">Check</button>
+        </div>
+        <p id="phone-error" class="field-error" hidden></p>
+      </form>
+
+      <div id="key-row" class="key-row" hidden>
+        <label for="access-key" class="field-label">Access key</label>
+        <input id="access-key" class="input" type="password" autocomplete="current-password">
+      </div>
+
+      <nav id="recent" class="recent" aria-label="Recent lookups" hidden></nav>
+    </section>
 
     <section id="result" class="result" hidden aria-live="polite"></section>
   </main>

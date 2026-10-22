@@ -1,14 +1,6 @@
 (function () {
   "use strict";
 
-  const COURIERS = {
-    steadfast: { short: "SF", color: "#0d9488" },
-    pathao: { short: "PA", color: "#e11d48" },
-    redx: { short: "RX", color: "#dc2626" },
-    paperfly: { short: "PF", color: "#2563eb" },
-    carrybee: { short: "CB", color: "#d97706" },
-  };
-
   const ICONS = {
     refresh: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg>',
     flag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4m0 0h11l-2 4 2 4H5"/></svg>',
@@ -19,10 +11,12 @@
 
   const form = document.getElementById("check-form");
   const input = document.getElementById("phone");
-  const goBtn = form.querySelector(".go");
+  const checkBtn = document.getElementById("check-btn");
+  const phoneError = document.getElementById("phone-error");
   const keyRow = document.getElementById("key-row");
   const keyInput = document.getElementById("access-key");
   const recentBox = document.getElementById("recent");
+  const connection = document.getElementById("connection");
   const result = document.getElementById("result");
 
   let reasonOptions = null;
@@ -43,7 +37,7 @@
       if (k === "class") node.className = v;
       else if (k === "html") node.innerHTML = v;
       else if (k === "style") node.setAttribute("style", v);
-      else if (k.startsWith("aria-") || k === "role" || k === "for") node.setAttribute(k, v);
+      else if (k.startsWith("aria-") || k === "role" || k === "for" || k === "scope" || k === "datetime") node.setAttribute(k, v);
       else node[k] = v;
     }
     for (const c of children) if (c != null) node.append(c);
@@ -55,7 +49,16 @@
     return /^(?:88)?01[3-9]\d{8}$/.test(digits);
   }
 
-  // ---------- Recent searches ----------
+  // 01712345678 -> 01712-345678, the way numbers are usually written in Bangladesh.
+  function formatPhone(phone) {
+    return /^\d{11}$/.test(phone) ? `${phone.slice(0, 5)}-${phone.slice(5)}` : phone;
+  }
+
+  function pct(n) {
+    return n == null ? "—" : `${Math.round(n * 10) / 10}%`;
+  }
+
+  // ---------- Recent lookups ----------
 
   function getRecent() {
     const list = storage((s) => JSON.parse(s.getItem(RECENT_KEY) || "[]"));
@@ -63,21 +66,20 @@
   }
 
   function addRecent(phone) {
-    const list = [phone, ...getRecent().filter((p) => p !== phone)].slice(0, 5);
-    storage((s) => s.setItem(RECENT_KEY, JSON.stringify(list)));
+    storage((s) => s.setItem(RECENT_KEY, JSON.stringify([phone, ...getRecent().filter((p) => p !== phone)].slice(0, 5))));
     renderRecent(phone);
   }
 
   function renderRecent(current) {
     const list = getRecent().filter((p) => p !== current);
     recentBox.hidden = !list.length;
-    recentBox.replaceChildren(...list.map((phone) => {
-      const chip = el("button", { type: "button", class: "chip" }, phone);
-      chip.addEventListener("click", () => {
-        input.value = phone;
+    recentBox.replaceChildren(el("span", null, "Recent"), ...list.map((phone) => {
+      const b = el("button", { type: "button" }, formatPhone(phone));
+      b.addEventListener("click", () => {
+        input.value = formatPhone(phone);
         check(phone);
       });
-      return chip;
+      return b;
     }));
   }
 
@@ -90,7 +92,7 @@
     try {
       res = await fetch(url, Object.assign({}, options, { headers }));
     } catch (e) {
-      throw new Error("No connection");
+      throw new Error("Can't reach the server. Check your connection and try again.");
     }
     let data = null;
     try {
@@ -101,17 +103,19 @@
     if (res.status === 401) {
       keyRow.hidden = false;
       keyInput.focus();
-      throw new Error("Enter the access key");
+      const err = new Error("Enter the access key to continue.");
+      err.auth = true;
+      throw err;
     }
-    if (!data) throw new Error("Server not running");
-    if (!res.ok) throw new Error(data.error || "Something went wrong");
+    if (!data) throw new Error("The server isn't responding. Start it with npm start.");
+    if (!res.ok) throw new Error(data.error || "Something went wrong.");
     storage((s) => (keyInput.value ? s.setItem(KEY_KEY, keyInput.value) : s.removeItem(KEY_KEY)));
     return data;
   }
 
-  function loadReasons() {
+  function loadMeta() {
     if (!reasonOptions) {
-      reasonOptions = api("/api/couriers").then((d) => d.reasons).catch((e) => {
+      reasonOptions = api("/api/couriers").catch((e) => {
         reasonOptions = null;
         throw e;
       });
@@ -119,50 +123,61 @@
     return reasonOptions;
   }
 
-  // ---------- Check ----------
+  function showConnection() {
+    loadMeta().then((meta) => {
+      const on = meta.couriers.filter((c) => c.configured).length;
+      const all = meta.couriers.length;
+      connection.className = "connection " + (meta.demo ? "partial" : on === all ? "ok" : on ? "partial" : "none");
+      connection.textContent = meta.demo ? "Demo mode" : `${on} of ${all} couriers connected`;
+      connection.hidden = false;
+    }).catch(() => {});
+  }
+
+  // ---------- Lookup ----------
+
+  function setError(message) {
+    phoneError.textContent = message || "";
+    phoneError.hidden = !message;
+    if (message) input.setAttribute("aria-invalid", "true");
+    else input.removeAttribute("aria-invalid");
+  }
 
   function setBusy(on) {
     busy = on;
-    goBtn.classList.toggle("busy", on);
-    goBtn.disabled = on;
+    checkBtn.disabled = on;
+    checkBtn.textContent = on ? "Checking…" : "Check";
   }
 
-  function showSkeleton() {
-    document.body.classList.add("has-result");
+  function showLoading() {
+    const lines = [70, 45, 90, 60].map((w) => el("div", { class: "skeleton-line", style: `width:${w}%` }));
     result.hidden = false;
-    result.replaceChildren(
-      el("div", { class: "skeleton", style: "height:176px" }),
-      el("div", { class: "skeleton", style: "height:84px" }),
-      el("div", { class: "skeleton", style: "height:280px" })
-    );
-  }
-
-  function showMessage(title, text) {
-    result.hidden = false;
-    result.replaceChildren(el("div", { class: "card message" }, el("strong", null, title), text ? el("p", null, text) : null));
+    result.replaceChildren(el("div", { class: "panel panel-body", style: "display:grid;gap:14px", "aria-label": "Loading" }, ...lines));
   }
 
   async function check(raw, refresh) {
     const phone = String(raw || "").trim();
+    if (busy) return;
     if (!phone) {
+      setError("Enter a phone number.");
       input.focus();
       return;
     }
-    if (busy) return;
     if (!looksLikePhone(phone)) {
-      document.body.classList.add("has-result");
-      showMessage("Invalid number", "Use an 11-digit number like 01712345678");
+      setError("Enter an 11-digit Bangladeshi mobile number, e.g. 01712-345678.");
+      input.focus();
       return;
     }
+    setError("");
     setBusy(true);
-    showSkeleton();
+    showLoading();
     try {
       const data = await api(`/api/check?phone=${encodeURIComponent(phone)}${refresh ? "&refresh=1" : ""}`);
-      input.value = data.phone;
+      input.value = formatPhone(data.phone);
       addRecent(data.phone);
       render(data);
+      showConnection();
     } catch (e) {
-      showMessage(e.message);
+      result.replaceChildren(el("div", { class: "alert", role: "alert" }, e.message));
     } finally {
       setBusy(false);
     }
@@ -170,139 +185,145 @@
 
   // ---------- Render ----------
 
-  function ring(rate, level) {
-    const r = 56;
-    const c = 2 * Math.PI * r;
-    const value = el("div", { class: "ring tone-" + level });
-    value.innerHTML =
-      `<svg viewBox="0 0 128 128" aria-hidden="true"><circle class="track" cx="64" cy="64" r="${r}"/>` +
-      `<circle class="value" cx="64" cy="64" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${c}"/></svg>`;
-    value.append(el("div", { class: "label" },
-      el("strong", null, rate == null ? "—" : `${Math.round(rate)}%`),
-      el("small", null, "success")));
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      value.querySelector(".value").style.strokeDashoffset = String(c * (1 - (rate || 0) / 100));
-    }));
-    return value;
-  }
-
-  function bar(success, cancel) {
+  function meter(success, cancel) {
     const total = success + cancel;
-    const b = el("div", { class: "bar", "aria-hidden": "true" });
+    const m = el("div", { class: "meter", "aria-hidden": "true" });
     if (total) {
       const ok = el("i", { class: "ok" });
+      ok.style.width = (success / total) * 100 + "%";
       const bad = el("i", { class: "bad" });
-      ok.style.width = "0%";
-      bad.style.width = "0%";
-      b.append(ok, bad);
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        ok.style.width = (success / total) * 100 + "%";
-        bad.style.width = (cancel / total) * 100 + "%";
-      }));
+      bad.style.width = (cancel / total) * 100 + "%";
+      m.append(ok, bad);
     }
-    return b;
+    return m;
+  }
+
+  function summaryPanel(data) {
+    const o = data.overall;
+    const advice = el("div", { class: "advice" }, el("strong", null, o.advice));
+    if (o.notes.length) advice.append(el("span", { class: "notes" }, o.notes.join(" · ")));
+
+    return el("article", { class: "panel" },
+      el("div", { class: "summary-top" },
+        el("div", null,
+          el("div", { class: "eyebrow" }, "Customer"),
+          el("div", { class: "phone" }, formatPhone(data.phone))),
+        el("span", { class: "status s-" + o.level }, o.title)),
+      el("dl", { class: "metrics" },
+        el("div", null, el("dt", null, "Success rate"), el("dd", null, pct(o.successRate))),
+        el("div", null, el("dt", null, "Total orders"), el("dd", null, String(o.total))),
+        el("div", null, el("dt", null, "Delivered"), el("dd", { class: o.success ? "pos" : null }, String(o.success))),
+        el("div", null, el("dt", null, "Returned"), el("dd", { class: o.cancel ? "neg" : null }, String(o.cancel)))),
+      meter(o.success, o.cancel),
+      advice);
   }
 
   function courierRow(c) {
-    const meta = COURIERS[c.id] || { short: c.name.slice(0, 2).toUpperCase(), color: "#64748b" };
-    const avatar = el("div", { class: "avatar", style: `--c:${meta.color}`, "aria-hidden": "true" }, meta.short);
-    const main = el("div", { class: "row-main" }, el("div", { class: "row-name" }, c.name));
-    let val;
-
-    if (c.status === "not_configured") {
-      val = el("div", { class: "row-val" }, el("span", null, "Off"));
-    } else if (c.status !== "ok") {
-      val = el("div", { class: "row-val", title: c.error }, el("span", null, "Unavailable"));
-    } else if (!c.total) {
-      main.append(bar(0, 0));
-      val = el("div", { class: "row-val" }, el("strong", null, "0"), el("span", null, "orders"));
-    } else {
-      const decided = c.success + c.cancel;
-      const rate = decided ? Math.round((c.success / decided) * 100) : 0;
-      main.append(bar(c.success, c.cancel));
-      val = el("div", { class: "row-val" },
-        el("strong", null, `${rate}%`),
-        el("span", null, `${c.success}/${decided}`));
+    const name = el("th", { scope: "row" }, c.name);
+    if (c.status !== "ok") {
+      const label = c.status === "not_configured" ? "Not connected" : "Unavailable";
+      return el("tr", null, name,
+        el("td", { class: "num muted" }, "—"),
+        el("td", { class: "num muted hide-sm" }, "—"),
+        el("td", { class: "num muted hide-sm" }, "—"),
+        el("td", { class: "muted", title: c.status === "error" ? c.error : null }, label));
     }
-    return el("div", { class: "row" + (c.status === "ok" ? "" : " off") }, avatar, main, val);
+    const decided = c.success + c.cancel;
+    const rate = decided ? (c.success / decided) * 100 : null;
+    return el("tr", null, name,
+      el("td", { class: "num" }, String(c.total)),
+      el("td", { class: "num hide-sm" }, String(c.success)),
+      el("td", { class: "num hide-sm" }, String(c.cancel)),
+      el("td", { class: "rate-cell" },
+        c.total
+          ? el("div", { class: "rate" }, meter(c.success, c.cancel), el("b", null, pct(rate)))
+          : el("span", { class: "muted" }, "No orders"),
+        c.total ? el("div", { class: "rate-sub" }, `${c.success} delivered · ${c.cancel} returned`) : null));
   }
 
-  function render(data) {
-    const o = data.overall;
-    const nodes = [];
+  function couriersPanel(data) {
+    const refresh = el("button", { type: "button", class: "btn", html: ICONS.refresh + "Refresh" });
+    refresh.addEventListener("click", () => check(data.phone, true));
+    const time = new Date(data.checkedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-    const verdict = el("div", { class: "verdict tone-" + o.level },
-      el("span", { class: "badge" }, o.title),
-      el("h2", null, data.phone),
-      el("p", null, o.advice));
-    if (o.notes.length) verdict.append(el("div", { class: "tags" }, ...o.notes.map((n) => el("span", { class: "tag" }, n))));
-    nodes.push(el("div", { class: "card hero" }, ring(o.successRate, o.level), verdict));
+    return el("section", { class: "panel", "aria-labelledby": "couriers-h" },
+      el("div", { class: "panel-head" },
+        el("h2", { id: "couriers-h" }, "Couriers"),
+        el("div", { class: "head-actions" }, el("span", { class: "meta" }, `Updated ${time}`), refresh)),
+      el("table", { class: "table" },
+        el("thead", null, el("tr", null,
+          el("th", { scope: "col" }, "Courier"),
+          el("th", { scope: "col", class: "num" }, "Orders"),
+          el("th", { scope: "col", class: "num hide-sm" }, "Delivered"),
+          el("th", { scope: "col", class: "num hide-sm" }, "Returned"),
+          el("th", { scope: "col" }, "Success rate"))),
+        el("tbody", null, ...data.couriers.map(courierRow))));
+  }
 
-    nodes.push(el("div", { class: "stats" },
-      el("div", { class: "card stat" }, el("strong", null, String(o.total)), el("span", null, "Orders")),
-      el("div", { class: "card stat ok" }, el("strong", null, String(o.success)), el("span", null, "Delivered")),
-      el("div", { class: "card stat bad" }, el("strong", null, String(o.cancel)), el("span", null, "Cancelled"))));
-
-    nodes.push(el("div", { class: "card list" }, ...data.couriers.map(courierRow)));
+  function reportsPanel(data) {
+    const toggle = el("button", { type: "button", class: "btn btn-danger", html: ICONS.flag + "Report customer", "aria-expanded": "false" });
+    const panel = el("section", { class: "panel", "aria-labelledby": "reports-h" },
+      el("div", { class: "panel-head" },
+        el("h2", { id: "reports-h" }, data.reports.length ? `Seller reports (${data.reports.length})` : "Seller reports"),
+        toggle));
 
     if (data.reports.length) {
-      nodes.push(el("div", { class: "reports" }, ...data.reports.map((r) =>
-        el("div", { class: "report-item" },
-          el("div", null, el("strong", null, r.reasonLabel || r.reason), r.note ? el("p", null, r.note) : null),
-          el("span", null, new Date(r.createdAt).toLocaleDateString())))));
+      panel.append(el("ul", { class: "report-list" }, ...data.reports.map((r) => {
+        const d = new Date(r.createdAt);
+        return el("li", null,
+          el("div", null, el("div", { class: "reason" }, r.reasonLabel || r.reason), r.note ? el("div", { class: "note" }, r.note) : null),
+          el("time", { datetime: r.createdAt }, d.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" })));
+      })));
+    } else {
+      panel.append(el("div", { class: "panel-body" }, el("p", { class: "empty" }, "No reports for this number.")));
     }
 
-    const recheck = el("button", { type: "button", class: "btn", html: ICONS.refresh + "Refresh" });
-    recheck.addEventListener("click", () => check(data.phone, true));
-    const report = el("button", { type: "button", class: "btn danger", html: ICONS.flag + "Report", "aria-expanded": "false" });
-    const toolbar = el("div", { class: "toolbar" }, recheck, report);
-    nodes.push(toolbar);
-
-    report.addEventListener("click", () => {
-      const existing = result.querySelector(".report-form");
-      if (existing) {
-        existing.remove();
-        report.setAttribute("aria-expanded", "false");
+    toggle.addEventListener("click", () => {
+      const open = panel.querySelector(".report-form");
+      if (open) {
+        open.remove();
+        toggle.setAttribute("aria-expanded", "false");
         return;
       }
-      report.setAttribute("aria-expanded", "true");
-      toolbar.after(reportForm(data.phone));
+      toggle.setAttribute("aria-expanded", "true");
+      panel.append(reportForm(data.phone, () => {
+        panel.querySelector(".report-form").remove();
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.focus();
+      }));
+      panel.querySelector("#report-reason").focus();
     });
-
-    if (data.demo) nodes.push(el("p", { class: "demo" }, "Demo data"));
-
-    result.hidden = false;
-    result.replaceChildren(...nodes);
+    return panel;
   }
 
-  function reportForm(phone) {
-    const reasons = el("div", { class: "reasons", role: "radiogroup", "aria-label": "Reason" });
-    const note = el("input", { class: "field", type: "text", maxLength: 300, placeholder: "Note (optional)", "aria-label": "Note" });
+  function reportForm(phone, close) {
+    const select = el("select", { class: "input", id: "report-reason", required: true });
+    const note = el("input", { class: "input", id: "report-note", type: "text", maxLength: 300, placeholder: "Optional" });
     const msg = el("p", { class: "form-msg", "aria-live": "polite" });
-    const submit = el("button", { type: "submit", class: "btn primary" }, "Submit report");
-    const f = el("form", { class: "card report-form" }, reasons, note, submit, msg);
+    const cancel = el("button", { type: "button", class: "btn" }, "Cancel");
+    const submit = el("button", { type: "submit", class: "btn btn-primary" }, "Submit report");
+    cancel.addEventListener("click", close);
 
-    loadReasons().then((options) => {
-      Object.entries(options).forEach(([value, text], i) => {
-        const id = "reason-" + value;
-        reasons.append(
-          el("input", { type: "radio", name: "reason", id, value, checked: i === 0 }),
-          el("label", { for: id }, text));
-      });
+    const f = el("form", { class: "report-form" },
+      el("div", null, el("label", { for: "report-reason", class: "field-label" }, "Reason"), select),
+      el("div", null, el("label", { for: "report-note", class: "field-label" }, "Details"), note),
+      el("div", { class: "actions" }, msg, cancel, submit));
+
+    loadMeta().then((meta) => {
+      select.replaceChildren(...Object.entries(meta.reasons).map(([value, text]) => el("option", { value }, text)));
     }).catch((e) => {
       msg.textContent = e.message;
     });
 
     f.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const chosen = f.querySelector('input[name="reason"]:checked');
-      if (!chosen) return;
+      if (!select.value) return;
       submit.disabled = true;
       try {
         await api("/api/reports", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone, reason: chosen.value, note: note.value }),
+          body: JSON.stringify({ phone, reason: select.value, note: note.value }),
         });
         await check(phone);
       } catch (err) {
@@ -310,12 +331,14 @@
         submit.disabled = false;
       }
     });
-
-    requestAnimationFrame(() => {
-      const first = f.querySelector('input[name="reason"]');
-      if (first) first.focus();
-    });
     return f;
+  }
+
+  function render(data) {
+    const nodes = [summaryPanel(data), couriersPanel(data), reportsPanel(data)];
+    if (data.demo) nodes.push(el("p", { class: "demo-note" }, "Demo mode — figures are sample data."));
+    result.hidden = false;
+    result.replaceChildren(...nodes);
   }
 
   // ---------- Wiring ----------
@@ -325,7 +348,11 @@
     check(input.value);
   });
 
-  // Pasting a full number checks it straight away.
+  input.addEventListener("input", () => {
+    if (!phoneError.hidden) setError("");
+  });
+
+  // Pasting a complete number runs the lookup straight away.
   input.addEventListener("paste", () => {
     setTimeout(() => {
       if (looksLikePhone(input.value)) check(input.value);
@@ -335,8 +362,14 @@
   keyInput.value = storage((s) => s.getItem(KEY_KEY)) || "";
   if (keyInput.value) keyRow.hidden = false;
   keyInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") check(input.value);
+    if (e.key === "Enter") {
+      e.preventDefault();
+      reasonOptions = null;
+      showConnection();
+      if (input.value) check(input.value);
+    }
   });
 
   renderRecent();
+  showConnection();
 })();
